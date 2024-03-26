@@ -22,82 +22,70 @@
 GROUP_ID := br.com.objectos
 ARTIFACT_ID := objectos.notes
 VERSION := 0.2-SNAPSHOT
-MODULE := $(ARTIFACT_ID)
-
-## Resolution dir (required)
-RESOLUTION_DIR := work/resolution
 
 ## Deps versions
-SLF4J_VERSION := 1.7.36
-TESTNG_VERSION := 7.9.0
+SLF4J_NOP := org.slf4j/slf4j-nop/1.7.36
+TESTNG := org.testng/testng/7.9.0
 
 # Delete the default suffixes
 .SUFFIXES:
 
 #
-# Default target
+# notes
 #
 
 .PHONY: all
 all: test
 
+include make/java-core.mk
+
 #
 # notes@clean
 #
 
-## basedir
-BASEDIR := .
-
-include make/tools.mk
-include make/deps.mk
-include make/resolver.mk
-include make/clean.mk
-$(eval $(call CLEAN_TASK,,))
+include make/common-clean.mk
 
 #
 # notes@compile
 #
 
 ## javac --release option
-JAVA_RELEASE = 21
+JAVA_RELEASE := 21
 
-## --enable-preview ?
-ENABLE_PREVIEW = 0
-
-## resolution trigger
-RESOLUTION_REQS := Makefile
-
-include make/compile.mk
-$(eval $(call COMPILE_TASK,,))
+include make/java-compile.mk
 
 #
 # notes@test-compile
 #
 
 ## test compile deps
-TEST_COMPILE_DEPS := $(COMPILE_MARKER)
-TEST_COMPILE_DEPS += $(RESOLUTION_DIR)/org.testng/testng/$(TESTNG_VERSION)
+TEST_COMPILE_DEPS := $(TESTNG)
 
-include make/test-compile.mk
-$(eval $(call TEST_COMPILE_TASK,,))
+include make/java-test-compile.mk
 
 #
 # notes@test
 #
 
-## www test runtime dependencies
-TEST_RUNTIME_DEPS := $(TEST_COMPILE_DEPS)
-TEST_RUNTIME_DEPS += $(RESOLUTION_DIR)/org.slf4j/slf4j-nop/$(SLF4J_VERSION)
+## test main class
+TEST_MAIN := objectos.notes.RunTests
 
-include make/test-run.mk
-$(eval $(call TEST_RUN_TASK,,))
+## www test runtime dependencies
+TEST_RUNTIME_DEPS := $(SLF4J_NOP)
+
+## test modules
+TEST_ADD_MODULES := org.testng
+
+## test --add-reads
+TEST_ADD_READS := objectos.notes=org.testng
+
+include make/java-test.mk
 
 #
 # notes@jar
 #
 
-include make/jar.mk
-$(eval $(call JAR_TASK,,))
+include make/java-jar.mk
 
 #
 # notes@pom
@@ -106,13 +94,8 @@ $(eval $(call JAR_TASK,,))
 ## pom.xml description
 DESCRIPTION := Objectos Notes provides a type-safe note sink API. 
 
-include pom.mk
-include make/pom.mk
-$(eval $(call POM_TASK,,))
-
 #
 # notes@install
 #
 
-include make/install.mk
-$(eval $(call INSTALL_TASK,,))
+include make/java-install.mk
